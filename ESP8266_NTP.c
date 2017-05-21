@@ -45,48 +45,48 @@ static void (*_esp8266_ntp_alarm_cb)(void);
 
 //NTP TIME RELATED
 static const char _esp8266_ntp_days_in_month[] = {
-								                    31, //MARCH
-								                    30, //APRIL
-								                    31, //MAY
-								                    30, //JUNE
-								                    31, //JULY
-								                    31, //AUGUST
-								                    30, //SEPTEMBER
-								                    31, //OCTOBER
-								                    30, //NOVEMBER
-								                    31, //DECEMBER
-								                    31, //JANUARY
-								                    29	//FEBRUARY
+                                                    31, //MARCH
+                                                    30, //APRIL
+                                                    31, //MAY
+                                                    30, //JUNE
+                                                    31, //JULY
+                                                    31, //AUGUST
+                                                    30, //SEPTEMBER
+                                                    31, //OCTOBER
+                                                    30, //NOVEMBER
+                                                    31, //DECEMBER
+                                                    31, //JANUARY
+                                                    29	//FEBRUARY
 							                    };
 							                    
 static const char* _esp8266_ntp_month_names[12] =   {   
-									                    "March",
-									                    "April",
-									                    "May",
-									                    "June",
-									                    "July",
-									                    "August",
-									                    "September",
-									                    "October",
-									                    "November",
-									                    "December",
-									                    "January",
-									                    "February"
+                                                        "March",
+                                                        "April",
+                                                        "May",
+                                                        "June",
+                                                        "July",
+                                                        "August",
+                                                        "September",
+                                                        "October",
+                                                        "November",
+                                                        "December",
+                                                        "January",
+                                                        "February"
 								                    };
 
 static const uint8_t esp8266_ntp_month_names_length[12] = {
-										                     5,	//MARCH
-										                     5,	//APRIL
-										                     3,	//MAY
-										                     4,	//JUNE
-										                     4, //JULY
-										                     6,	//AUG
-										                     9,	//SEPT
-										                     7,	//OCT
-										                     8,	//NOV
-										                     8,	//DEC
-										                     7,	//JAN
-										                     8	//FEB
+                                                            5,	//MARCH
+                                                            5,	//APRIL
+                                                            3,	//MAY
+                                                            4,	//JUNE
+                                                            4, //JULY
+                                                            6,	//AUG
+                                                            9,	//SEPT
+                                                            7,	//OCT
+                                                            8,	//NOV
+                                                            8,	//DEC
+                                                            7,	//JAN
+                                                            8	//FEB
 									                      };
 
 static const char* _esp8266_ntp_day_names[7] =   {
@@ -316,15 +316,26 @@ void ICACHE_FLASH_ATTR _esp8266_ntp_udp_data_recv_cb(void* arg, char* pusrdata, 
     
     os_timer_disarm(&_esp8266_ntp_reply_timer);
     
+    _esp8266_ntp_data->state = ESP8266_NTP_STATE_OK;
+    
+    //EXTRACT 32 BIT NTP TIMESTAMP FROM REPLY
+	uint32_t a = pusrdata[40];
+	uint32_t b = pusrdata[41];
+	uint32_t c = pusrdata[42];
+	uint32_t d = pusrdata[43];
+
+	_esp8266_ntp_data->timestamp = (a << 24) | (b << 16) | (c << 8) | d;
+
     if(_esp8266_ntp_debug)
     {
         os_printf("ESP8266 : NTP : NTP data received of length %d\n", length);
+        os_printf("ESP8266 : NTP : timestamp = %d\n", _esp8266_ntp_data->timestamp);
     }
-    
+	
+	
     //CALL USER CB IF NOT NULL
     if(_esp8266_ntp_data_ready_user_cb != NULL)
     {
-        _esp8266_ntp_data->state = ESP8266_NTP_STATE_OK;
        (_esp8266_ntp_data_ready_user_cb)(_esp8266_ntp_data);
     }
 }
